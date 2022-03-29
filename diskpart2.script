@@ -1,0 +1,2 @@
+select volume c
+shrink desired=16384 minimum=4096

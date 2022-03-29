@@ -1,0 +1,1 @@
+echo ("select volume " + $($(echo "rescan`nlist volume" | diskpart | Select-String -Pattern "512 MB").toString().Split("F")[0] -replace "\D+","").toString() + "`nassign letter=O") | diskpart

@@ -1,0 +1,294 @@
+#!/bin/bash
+
+# prepare setup-user
+# add to sudoers
+echo "%wheel ALL=(ALL) ALL" >> /mnt/etc/sudoers
+
+# autologin setup-user
+arch-chroot /mnt groupadd -r autologin
+arch-chroot /mnt useradd -m -G wheel,autologin setup-user
+
+# add xauthority
+touch /mnt/home/setup-user/.Xauthority
+arch-chroot /mnt chown setup-user /home/setup-user/.Xauthority
+
+# set password for setup-user
+echo "echo -e 'setup\nsetup' | passwd setup-user" | arch-chroot /mnt
+
+
+# clean up desktop entries
+rm -f /mnt/usr/share/applications/avahi-discover.desktop
+rm -f /mnt/usr/share/applications/bssh.desktop
+rm -f /mnt/usr/share/applications/bvnc.desktop
+rm -f /mnt/usr/share/applications/qv4l2.desktop
+rm -f /mnt/usr/share/applications/qvidcap.desktop
+
+# configure lightdm
+echo "[greeter]
+background=/usr/share/backgrounds/cutefishos/default.jpg" > /mnt/etc/lightdm/lightdm-gtk-greeter.conf
+
+
+echo "# to get a full configuration file, download it from https://raw.githubusercontent.com/canonical/lightdm/main/data/lightdm.conf
+# greeter-session and session-wrapper have to keep their values.
+[LightDM]
+
+[Seat:*]
+greeter-session=lightdm-gtk-greeter
+session-wrapper=/etc/lightdm/Xsession
+autologin-user=setup-user
+autologin-session=cutefish-xsession
+
+[XDMCPServer]
+[VNCServer]
+" > /mnt/etc/lightdm/lightdm.conf
+
+# add userlink script
+
+echo '#!/bin/python3
+from os import system, listdir
+from os.path import isdir
+from re import compile
+
+# regex for storage block devices
+storageDevRegex = compile("(sd[a-z][1-9])|(nvme[0-9]n[1-9]p[1-9])")
+
+devFiles = listdir("/dev")
+
+# get list of storage block devices
+storageDevices = []
+for i in devFiles:
+	if storageDevRegex.match(i):
+		storageDevices.append(i)
+
+system("echo setup | sudo -S mkdir /c")
+# find and mount the windows partition
+for i in storageDevices:
+	system("echo setup | sudo -S umount /c")
+	system("echo setup | sudo -S mount /dev/" + i + " /c")
+	if isdir("/c/Users"):
+		break
+
+#system("echo setup | sudo -S bash -c \"genfstab -U /c > /etc/fstab\"")
+# some fstab entries have to be removed
+
+# copied from early version
+import tkinter as tk
+
+globalPass = ""
+def assignGlobalPW(password, root):
+	global globalPass
+	globalPass = password.get()
+	root.destroy()
+
+def getPW(username):
+	root = tk.Tk()
+	root.geometry("800x600")
+	root.title("Transfer user accounts")
+	root.configure(bg="white")
+	tk.Label(root, text="\nTransfer user accounts\n", font=("Arial", 25), bg="white").pack()
+	tk.Label(root, text="Please enter the password for the user " + username + "\n\n", font=("Arial", 14), bg="white").pack()
+	password = tk.StringVar(root, value="")
+	tk.Entry(root, show="*", width=50, textvariable=password).pack()
+	root.bind("<Return>", lambda x:[assignGlobalPW(password, root)])
+	tk.Button(root, text="Next", command=lambda:[assignGlobalPW(password, root)], bg="white").pack()
+	root.mainloop()
+#end copy
+
+for i in listdir("/c/Users"):
+	if i == "All Users" or i == "Default" or i == "Default User" or i == "Public" or i == "desktop.ini" or i == "defaultuser0":
+		continue
+	system("echo setup | sudo -S useradd -m -G wheel " + i)
+	# the following is copied from an earlier version
+	getPW(i)
+	password = globalPass
+	globalPass = "" # safety
+	system("echo setup | sudo -S bash -c \"yes " + password + " | passwd " + i + "\"")
+	password = "" # safety
+	# end copy
+	system("echo setup | sudo -S rm -rf /home/" + i)
+	system("echo setup | sudo -S ln -s /c/Users/" + i + " /home/" + i)
+	open("/home/" + i + "/.xprofile", "w").write("xbindkeys &")
+	open("home/" + i + "/.xbindkeysrc", "w").write("\"cutefish-launcher\"\n\tSuper_L")
+' > /mnt/home/setup-user/setup-userlink.py
+
+# add oobe script
+
+echo "#!/bin/bash
+while true; do
+	killall cutefish-dock && break
+done
+
+# we'll execute this part once the dock could be killed which means the session was started
+
+su setup-user -c 'DISPLAY=:0 python3 /home/setup-user/setup-userlink.py'
+
+echo GRUB_DISABLE_OS_PROBER=false >> /etc/default/grub
+grub-mkconfig -o /boot/grub/grub.cfg
+# fix for grub.cfg
+mv /boot/grub/grub.cfg.new /boot/grub/grub.cfg
+
+# install nvidia drivers if required. This doesn't work properly yet...
+if [[ \"\$(lspci)\" == *\"NVIDIA\"* ]]; then
+	pacman -S nvidia nvidia-prime
+
+else
+	echo '#!/bin/bash
+\$@' > /bin/prime-run
+	chmod +x /bin/prime-run
+
+fi
+
+killall cutefish-session
+userdel --remove --force setup-user
+genfstab -U /c | sed -e 's/\//\/c/g' >> /etc/fstab
+systemctl disable oobe.service
+reboot
+" > /mnt/home/setup-user/setup.sh
+
+# add oobe service
+
+echo '[Unit]
+Description = Initial setup
+
+[Service]
+User=root
+ExecStart=/bin/bash /home/setup-user/setup.sh
+
+[Install]
+WantedBy=multi-user.target' > /mnt/etc/systemd/system/oobe.service
+
+# add flatpak fix. this can be removed once the cutefish devs merge the pr and downstream the changes to the repo.
+echo '[Unit]
+Description = Fix Flatpak apps not showing in the app launcher
+
+[Service]
+User=root
+ExecStart=/bin/bash -c "cp -n /var/lib/flatpak/exports/share/applications/* /usr/share/applications/ "
+
+[Install]
+WantedBy=multi-user.target' > /mnt/etc/systemd/system/flatpakfix.service
+
+arch-chroot /mnt  sudo systemctl enable flatpakfix.service
+
+# install and setup yay and plymouth from the aur
+
+arch-chroot /mnt su setup-user -c "cd /home/setup-user && git clone https://aur.archlinux.org/yay.git && cd yay && makepkg --noconfirm && echo setup | sudo -S pacman -U *.tar.zst --noconfirm"
+arch-chroot /mnt su setup-user -c "cd /home/setup-user && git clone https://aur.archlinux.org/plymouth.git && cd plymouth && makepkg --noconfirm && echo setup | sudo -S pacman -U *.tar.zst --noconfirm"
+echo "HOOKS=(base udev plymouth autodetect modconf block filesystems keyboard fsck) " > /mnt/etc/mkinitcpio.conf
+arch-chroot /mnt plymouth-set-default-theme bgrt -R
+
+# update grub for plymouth
+echo '# GRUB boot loader configuration
+
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR="Arch"
+GRUB_CMDLINE_LINUX_DEFAULT="loglevel=0 quiet splash "
+GRUB_CMDLINE_LINUX=""
+
+# Preload both GPT and MBR modules so that they are not missed
+GRUB_PRELOAD_MODULES="part_gpt part_msdos"
+
+# Uncomment to enable booting from LUKS encrypted devices
+#GRUB_ENABLE_CRYPTODISK=y
+
+# Set to countdown or hidden to change timeout behavior,
+# press ESC key to display menu.
+GRUB_TIMEOUT_STYLE=menu
+
+# Uncomment to use basic console
+#GRUB_TERMINAL_INPUT=console
+
+# Uncomment to disable graphical terminal
+#GRUB_TERMINAL_OUTPUT=console
+
+# The resolution used on graphical terminal
+# note that you can use only modes which your graphic card supports via VBE
+# you can see them in real GRUB with the command `vbeinfo
+GRUB_GFXMODE=auto
+
+# Uncomment to allow the kernel use the same resolution used by grub
+GRUB_GFXPAYLOAD_LINUX=keep
+
+# Uncomment if you want GRUB to pass to the Linux kernel the old parameter
+# format "root=/dev/xxx" instead of "root=/dev/disk/by-uuid/xxx"
+#GRUB_DISABLE_LINUX_UUID=true
+
+# Uncomment to disable generation of recovery mode menu entries
+GRUB_DISABLE_RECOVERY=true
+
+# Uncomment and set to the desired menu colors.  Used by normal and wallpaper
+# modes only.  Entries specified as foreground/background.
+#GRUB_COLOR_NORMAL="light-blue/black"
+#GRUB_COLOR_HIGHLIGHT="light-cyan/blue"
+
+# Uncomment one of them for the gfx desired, a image background or a gfxtheme
+#GRUB_BACKGROUND="/path/to/wallpaper"
+#GRUB_THEME="/path/to/gfxtheme"
+
+# Uncomment to get a beep at GRUB start
+#GRUB_INIT_TUNE="480 440 1"
+
+# Uncomment to make GRUB remember the last selection. This requires
+# setting GRUB_DEFAULT=saved above.
+#GRUB_SAVEDEFAULT=true
+
+# Uncomment to disable submenus in boot menu
+#GRUB_DISABLE_SUBMENU=y
+
+' > /mnt/etc/default/grub
+
+# set keyboard layout
+mainlocale=$(cat /dev/vda | head -c 2)
+if [[ $(cat /dev/vda) == *"_"* ]]; then
+	sublocale=$(cat /dev/vda | head -c 5 | tail -c 2 | awk '{print tolower($0)}')
+	echo "Section \"InputClass\"
+		Identifier \"system-keyboard\"
+		MatchIsKeyboard \"on\"
+		Option \"XkbLayout\" \"$sublocale,$mainlocale\"
+	EndSection" > /mnt/etc/X11/xorg.conf.d/00-keyboard.conf
+else
+	echo "Section \"InputClass\"
+		Identifier \"system-keyboard\"
+		MatchIsKeyboard \"on\"
+		Option \"XkbLayout\" \"$mainlocale\"
+	EndSection" > /mnt/etc/X11/xorg.conf.d/00-keyboard.conf
+fi
+
+# install ggp
+echo '#!/bin/python3
+# this software asks for the password with a gui and prints it to stdout for piping to programs like sudo
+import tkinter as tk
+
+root = tk.Tk()
+
+def end(root, password):
+	print(password.get())
+	root.destroy()
+
+root.configure(bg="white")
+root.geometry("250x120")
+root.title("Password entry")
+tk.Label(root, text="\nPlease enter your Password\n", bg="white").pack()
+password = tk.StringVar(root, value="")
+tk.Entry(root, show="*", width=30, textvariable=password).pack()
+root.bind("<Return>", lambda x:[end(root, password)])
+tk.Button(root, text="Continue", command=lambda:[end(root, password)], bg="white").pack()
+
+root.mainloop()' > /mnt/bin/ggp
+
+chmod +x /mnt/bin/ggp
+
+# install grub theme
+arch-chroot /mnt git clone https://github.com/vinceliuice/Graphite-gtk-theme.git /home/setup-user/grub-theme
+arch-chroot /mnt bash /home/setup-user/grub-theme/other/grub2/install.sh
+
+# enable oobe
+arch-chroot /mnt systemctl enable oobe.service
+
+
+# NOTE: Add ucode; done
+# NOTE: add super key fix
+# NOTE: Add nvidia; failed
+# NOTE: Add app uninstaller and gamemode enabler: lorStore
+# NOTE: tiling?
