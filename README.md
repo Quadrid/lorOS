@@ -18,6 +18,10 @@ The desktop enviroment is [cutefish](https://en.cutefishos.com). It is, like our
 Method 1: Use the installer which can be downloaded here (we haven't made it yet)
 
 Method 2:
+1) Download the newest release from [here](https://github.com/Quadrid/lorOS/releases)
+2) Execute run.bat with administrative privileges to start the installation
+
+Method 3:
 1) Download this repository
 2) Build the iso on a linux system with arch-install-scripts installed by running `bash build.sh` in the downloaded directory
 3) Download grub for Windows from [Here](https://ftp.gnu.org/gnu/grub/grub-2.06-for-windows.zip) and extract it into a directory with the name grub in the downloaded directory
