@@ -11,7 +11,7 @@ Furthermore, lorOS offers a lot of convenience during the switch. The home direc
 ## What is lorOS based on?
 We use Arch Linux as a base. While it isn't considered the most stable distro, it is easy to modify the install media which is why we chose it: We want to make it as easy as possible to contribute.
 
-The desktop enviroment is [cutefish](https://en.cutefishos.com). It is, like our system, unfinished, but it is easy to use
+The desktop enviroment is [cutefish](https://en.cutefishos.com). It is, like our system, unfinished, but it is easy to use.
 
 
 ## How to install lorOS on your Windows computer
