@@ -15,11 +15,12 @@ The desktop enviroment is [cutefish](https://en.cutefishos.com). It is, like our
 
 
 ## How to install lorOS on your Windows computer
-Method 1: Use the installer which can be downloaded here (we haven't made it yet)
+Method 1: Use the installer which can be downloaded here (we haven't made it yet) and continue with the Secure Boot section
 
 Method 2:
 1) Download the newest release from [here](https://github.com/Quadrid/lorOS/releases)
 2) Execute run.bat with administrative privileges to start the installation
+3) Continue with the Secure Boot section
 
 Method 3:
 1) Download this repository
@@ -27,6 +28,12 @@ Method 3:
 3) Download grub for Windows from [Here](https://ftp.gnu.org/gnu/grub/grub-2.06-for-windows.zip) and extract it into a directory with the name grub in the downloaded directory
 4) Install QEMU for Windows to a directory named qemu in the downloaded directory
 5) Execute run.bat with administrative privileges to start the installation
+6) Continue with the Secure Boot section
+
+## Secure Boot
+On most compatible computers, Secure Boot is enabled by default. This is not an issue anymore, but you'll have to do some extra steps if Secure Boot is enabled.
+
+After the Installation has finished and you have rebooted, you might see an error message. Press the enter key to get to a menu with a few choices. Here, you have to navigate to "Enroll Hash" with your arrow keys and press enter to confirm, then select "loader.efi", select "yes", and then "Reboot System". After this procedure, the newly installed system should start.
 
 ## Mac or Linux computers
 We do not currently have support for macs or linux computers. The goal of this software is to simplify the switch to a linux-based system for windows users.
