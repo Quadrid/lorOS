@@ -286,6 +286,16 @@ arch-chroot /mnt bash /home/setup-user/grub-theme/other/grub2/install.sh
 # enable oobe
 arch-chroot /mnt systemctl enable oobe.service
 
+# fix secure boot
+# sources:
+# https://gitlab.com/systemrescue/systemrescue-sources/-/issues/50
+# https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/
+# i'm incredibly thankful for this
+
+mv /mnt/boot/EFI/lorOS/grubx64.efi /mnt/boot/EFI/lorOS/loader.efi
+curl https://blog.hansenpartnership.com/wp-uploads/2013/PreLoader.efi -o /mnt/boot/EFI/lorOS/grubx64.efi
+curl https://blog.hansenpartnership.com/wp-uploads/2013/HashTool.efi -o /mnt/boot/EFI/lorOS/HashTool.efi
+sed -i 's/SecureBoot/SecureB00t/' /mnt/boot/EFI/lorOS/loader.efi
 
 # NOTE: Add ucode; done
 # NOTE: add super key fix
