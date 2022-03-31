@@ -129,7 +129,7 @@ mv /boot/grub/grub.cfg.new /boot/grub/grub.cfg
 
 # install nvidia drivers if required. This doesn't work properly yet...
 if [[ \"\$(lspci)\" == *\"NVIDIA\"* ]]; then
-	pacman -S nvidia nvidia-prime
+	pacman -S nvidia nvidia-prime --noconfirm
 
 else
 	echo '#!/bin/bash
@@ -289,6 +289,6 @@ arch-chroot /mnt systemctl enable oobe.service
 
 # NOTE: Add ucode; done
 # NOTE: add super key fix
-# NOTE: Add nvidia; failed
+# NOTE: Add nvidia; not fully tested, shouldn't break anything tho
 # NOTE: Add app uninstaller and gamemode enabler: lorStore
 # NOTE: tiling?
