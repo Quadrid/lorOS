@@ -127,7 +127,11 @@ grub-mkconfig -o /boot/grub/grub.cfg
 # fix for grub.cfg
 mv /boot/grub/grub.cfg.new /boot/grub/grub.cfg
 
-# install nvidia drivers if required. This doesn't work properly yet...
+# install nvidia drivers if required.
+rm -rf /etc/pacman.d/gnupg
+pacman-key --init
+pacman-key --populate archlinux
+
 if [[ \"\$(lspci)\" == *\"NVIDIA\"* ]]; then
 	pacman -S nvidia nvidia-prime --noconfirm
 
