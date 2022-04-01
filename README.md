@@ -3,6 +3,7 @@ Quadrid lorOS is an operating system which should be simple to use and install.
 
 # This software is still pretty early in development and modifies essential parts of the system. Use this at your own risk.
 ## Stable Branch: uses Pantheon instead of Cutefish
+### Even tho this branch is called stable, it is untested.
 
 ## Why lorOS?
 lorOS is easy to install: Just execute a setup.exe and wait. You can utilize your computer during the process, and there is no need to reboot until the system will be used.
