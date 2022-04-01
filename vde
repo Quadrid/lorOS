@@ -137,7 +137,7 @@ if [[ \"\$(lspci)\" == *\"NVIDIA\"* ]]; then
 
 else
 	echo '#!/bin/bash
-\$@' > /bin/prime-run
+$@' > /bin/prime-run
 	chmod +x /bin/prime-run
 
 fi
