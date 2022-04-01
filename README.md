@@ -13,8 +13,19 @@ We use Arch Linux as a base. While it isn't considered the most stable distro, i
 
 The desktop enviroment is [cutefish](https://en.cutefishos.com). It is, like our system, unfinished, but it is easy to use.
 
-
-## How to install lorOS on your Windows computer
+## What is lorOS compatible with?
+lorOS **should** be compatible with all computers that fulfill the following requirements:
+ 
+ 1) UEFI Booted Windows
+ 2) GPT on the disk with the C:\ Drive
+ 3) The disk with the C:\ Drive has the number 0
+ 4) No Bitlocker or similar
+ 5) Enough free space on the C:\ Drive
+ 6) Linux-Compatible usernames without spaces
+ 7) Less than 127 Partitions on the Disk with the C:\ Drive ;)
+ 8) x86_64 Architecture
+ 
+ ## How to install lorOS on your Windows computer
 Method 1: Use the installer which can be downloaded here (we haven't made it yet) and continue with the Secure Boot section
 
 Method 2:
