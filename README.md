@@ -2,6 +2,7 @@
 Quadrid lorOS is an operating system which should be simple to use and install.
 
 # This software is still pretty early in development and modifies essential parts of the system. Use this at your own risk.
+## Stable Branch: uses Pantheon instead of Cutefish
 
 ## Why lorOS?
 lorOS is easy to install: Just execute a setup.exe and wait. You can utilize your computer during the process, and there is no need to reboot until the system will be used.
@@ -10,8 +11,6 @@ Furthermore, lorOS offers a lot of convenience during the switch. The home direc
 
 ## What is lorOS based on?
 We use Arch Linux as a base. While it isn't considered the most stable distro, it is easy to modify the install media which is why we chose it: We want to make it as easy as possible to contribute.
-
-The desktop enviroment is [cutefish](https://en.cutefishos.com). It is, like our system, unfinished, but it is easy to use.
 
 ## What is lorOS compatible with?
 lorOS **should** be compatible with all computers that fulfill the following requirements:
