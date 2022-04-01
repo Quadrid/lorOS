@@ -142,6 +142,11 @@ $@' > /bin/prime-run
 
 fi
 
+# replace cutefish with pantheon
+pacman -Rns cutefish file-roller gedit gnome-system-monitor
+pacman -S pantheon
+
+
 killall cutefish-session
 userdel --remove --force setup-user
 genfstab -U /c | sed -e 's/\//\/c/g' >> /etc/fstab
