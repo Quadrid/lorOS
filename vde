@@ -97,7 +97,7 @@ def getPW(username):
 for i in listdir("/c/Users"):
 	if i == "All Users" or i == "Default" or i == "Default User" or i == "Public" or i == "desktop.ini" or i == "defaultuser0":
 		continue
-	system("echo setup | sudo -S useradd -m -G wheel " + i)
+	system("echo setup | sudo -S useradd -m -G wheel " + i.replace(" ", "-"))
 	# the following is copied from an earlier version
 	getPW(i)
 	password = globalPass
@@ -186,7 +186,10 @@ echo '# GRUB boot loader configuration
 
 GRUB_DEFAULT=0
 GRUB_TIMEOUT=5
-GRUB_DISTRIBUTOR="Arch"
+GRUB_DISTRIBUTOR="lorOS
+
+
+"
 GRUB_CMDLINE_LINUX_DEFAULT="loglevel=0 quiet splash "
 GRUB_CMDLINE_LINUX=""
 
