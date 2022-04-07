@@ -1,3 +1,5 @@
+## The unstable branch contains untested changes. We'd be happy if people would test them and report feedback through the issues tab. Information on the changed elements is in unstable.md.
+
 # lorOS
 Quadrid lorOS is an operating system which should be simple to use and install.
 
