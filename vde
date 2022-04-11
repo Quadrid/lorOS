@@ -361,11 +361,20 @@ while True:
 	
 	sleep(.8)
 EOF
-# continue here with adaption
 chmod +x /mnt/bin/ldmauthd
-sudo cp src/ldmauth.service /etc/systemd/system/ldmauth.service
-sudo systemctl enable ldmauth
-sudo touch /etc/ldmauth.conf
+cat <<EOF > /mnt/systemd/system/ldmauth.service
+[Unit]
+Description=Service to start the ldmauth daemon
+
+[Service]
+User=root
+ExecStart=/bin/python3 /bin/ldmauthd
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable ldmauth
+echo "usblogin verify $username" > /mnt/etc/ldmauth.conf
 
 # install grub theme
 arch-chroot /mnt git clone https://github.com/vinceliuice/Graphite-gtk-theme.git /home/setup-user/grub-theme
