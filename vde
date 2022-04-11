@@ -286,6 +286,87 @@ root.mainloop()' > /mnt/bin/ggp
 
 chmod +x /mnt/bin/ggp
 
+# install usblogin
+
+cat <<EOF > /mnt/bin/usblogin
+#!/bin/bash
+# usage: usblogin create path-to-device username / usblogin verify username / usblogin init
+set -e
+
+[ "$1" == "init" ] && mkdir -p /var/lib/usblogin-keys
+[ "$1" == "create" ] && echo USBLOGINKEY$(dd if=/dev/urandom of=/dev/stdout count=2048) > $2 && head -c 1000011 $2 | sha512sum | cut -d ' ' -f 1 > /var/lib/usblogin-keys/$3
+if [ "$1" == "verify" ]
+then
+	for device in $(ls -1 /dev | grep -x 'sd[a-z]')
+	do
+		[ "$(head -c 1000011 /dev/$device | sha512sum | cut -d ' ' -f 1)" == "$(cat /var/lib/usblogin-keys/$2)" ] && exit 0 || true
+	done
+	exit 1
+fi
+EOF
+
+chmod +x /mnt/bin/usblogin
+
+# install ldmauth
+
+echo "#%PAM-1.0
+auth        sufficient  pam_succeed_if.so user ingroup nopasswdlogin
+auth        include     system-login
+-auth       optional    pam_gnome_keyring.so
+account     include     system-login
+password    include     system-login
+session     include     system-login
+-session    optional    pam_gnome_keyring.so auto_start" > /etc/pam.d/lightdm
+
+cat <<EOF > /mnt/bin/ldmauthd
+#!/bin/python3
+
+from os import system
+# clear group for safety
+system("groupdel --force nopasswdlogin")
+system("groupadd nopasswdlogin")
+
+nopasswdloginusers = []
+
+def auth(user):
+	system("gpasswd -a " + user + " nopasswdlogin")
+	global nopasswdloginusers
+	nopasswdloginusers.append(user)
+
+def deauth(user):
+	system("gpasswd -d " + user + " nopasswdlogin")
+	global nopasswdloginusers
+	nopasswdloginusers.remove(user)
+
+from os import listdir
+from time import sleep
+while True:
+	for user in listdir("/home"):
+		authed = False
+		for application in open("/etc/ldmauth.conf").read().split("\n"):
+			print("app:"+application.replace("$username", user))
+			if "$username" not in application:
+				#print("app:skip")
+				continue
+			if  system(application.replace("$username", user)) == 0:
+				#print("app:sucess")
+				authed = True
+				break
+			#else:
+				#print("app:fail")
+		if authed:
+			auth(user)
+		elif user in nopasswdloginusers:
+			deauth(user)
+	
+	sleep(.8)
+EOF
+# continue here with adaption
+chmod +x /mnt/bin/ldmauthd
+sudo cp src/ldmauth.service /etc/systemd/system/ldmauth.service
+sudo systemctl enable ldmauth
+sudo touch /etc/ldmauth.conf
+
 # install grub theme
 arch-chroot /mnt git clone https://github.com/vinceliuice/Graphite-gtk-theme.git /home/setup-user/grub-theme
 arch-chroot /mnt bash /home/setup-user/grub-theme/other/grub2/install.sh
