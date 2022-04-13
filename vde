@@ -313,8 +313,8 @@ cat <<EOF > /mnt/bin/bluetoothlogin
 set -e
 
 [ "\$1" == "init" ] && mkdir -p /var/lib/bluetoothlogin-keys
-[ "\$1" == "create" ] && echo  $2 > /var/lib/bluetoothlogin-keys/\$3
-[ "\$1" == "verify" ] && l2ping $(cat /var/lib/bluetoothlogin-keys/\$2) -t 1 -c 1
+[ "\$1" == "create" ] && echo  \$2 > /var/lib/bluetoothlogin-keys/\$3
+[ "\$1" == "verify" ] && l2ping \$(cat /var/lib/bluetoothlogin-keys/\$2) -t 1 -c 1
 EOF
 
 chmod +x /mnt/bin/bluetoothlogin
@@ -374,7 +374,7 @@ while True:
 	sleep(.8)
 EOF
 chmod +x /mnt/bin/ldmauthd
-cat <<EOF > /mnt/systemd/system/ldmauth.service
+cat <<EOF > /mnt/etc/systemd/system/ldmauth.service
 [Unit]
 Description=Service to start the ldmauth daemon
 
