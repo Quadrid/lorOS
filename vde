@@ -291,12 +291,12 @@ cat <<EOF > /mnt/bin/usblogin
 set -e
 
 [ "\$1" == "init" ] && mkdir -p /var/lib/usblogin-keys
-[ "\$1" == "create" ] && echo USBLOGINKEY$(dd if=/dev/urandom of=/dev/stdout count=2048) > $2 && head -c 1000011 $2 | sha512sum | cut -d ' ' -f 1 > /var/lib/usblogin-keys/$3
+[ "\$1" == "create" ] && echo USBLOGINKEY\$(dd if=/dev/urandom of=/dev/stdout count=2048) > \$2 && head -c 1000011 \$2 | sha512sum | cut -d ' ' -f 1 > /var/lib/usblogin-keys/\$3
 if [ "\$1" == "verify" ]
 then
 	for device in $(ls -1 /dev | grep -x 'sd[a-z]')
 	do
-		[ "\$(head -c 1000011 /dev/$device | sha512sum | cut -d ' ' -f 1)" == "\$(cat /var/lib/usblogin-keys/\$2)" ] && exit 0 || true
+		[ "\$(head -c 1000011 /dev/\$device | sha512sum | cut -d ' ' -f 1)" == "\$(cat /var/lib/usblogin-keys/\$2)" ] && exit 0 || true
 	done
 	exit 1
 fi
