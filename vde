@@ -290,13 +290,13 @@ cat <<EOF > /mnt/bin/usblogin
 # usage: usblogin create path-to-device username / usblogin verify username / usblogin init
 set -e
 
-[ "$1" == "init" ] && mkdir -p /var/lib/usblogin-keys
-[ "$1" == "create" ] && echo USBLOGINKEY$(dd if=/dev/urandom of=/dev/stdout count=2048) > $2 && head -c 1000011 $2 | sha512sum | cut -d ' ' -f 1 > /var/lib/usblogin-keys/$3
-if [ "$1" == "verify" ]
+[ "\$1" == "init" ] && mkdir -p /var/lib/usblogin-keys
+[ "\$1" == "create" ] && echo USBLOGINKEY$(dd if=/dev/urandom of=/dev/stdout count=2048) > $2 && head -c 1000011 $2 | sha512sum | cut -d ' ' -f 1 > /var/lib/usblogin-keys/$3
+if [ "\$1" == "verify" ]
 then
 	for device in $(ls -1 /dev | grep -x 'sd[a-z]')
 	do
-		[ "$(head -c 1000011 /dev/$device | sha512sum | cut -d ' ' -f 1)" == "$(cat /var/lib/usblogin-keys/$2)" ] && exit 0 || true
+		[ "\$(head -c 1000011 /dev/$device | sha512sum | cut -d ' ' -f 1)" == "\$(cat /var/lib/usblogin-keys/\$2)" ] && exit 0 || true
 	done
 	exit 1
 fi
@@ -312,9 +312,9 @@ cat <<EOF > /mnt/bin/bluetoothlogin
 # inspired by LethalEthan's Bluetooth-Unlock
 set -e
 
-[ "$1" == "init" ] && mkdir -p /var/lib/bluetoothlogin-keys
-[ "$1" == "create" ] && echo  $2 > /var/lib/bluetoothlogin-keys/$3
-[ "$1" == "verify" ] && l2ping $(cat /var/lib/bluetoothlogin-keys/$2) -t 1 -c 1
+[ "\$1" == "init" ] && mkdir -p /var/lib/bluetoothlogin-keys
+[ "\$1" == "create" ] && echo  $2 > /var/lib/bluetoothlogin-keys/\$3
+[ "\$1" == "verify" ] && l2ping $(cat /var/lib/bluetoothlogin-keys/\$2) -t 1 -c 1
 EOF
 
 chmod +x /mnt/bin/bluetoothlogin
@@ -328,7 +328,7 @@ auth        include     system-login
 account     include     system-login
 password    include     system-login
 session     include     system-login
--session    optional    pam_gnome_keyring.so auto_start" > /etc/pam.d/lightdm
+-session    optional    pam_gnome_keyring.so auto_start" > /mnt/etc/pam.d/lightdm
 
 cat <<EOF > /mnt/bin/ldmauthd
 #!/bin/python3
@@ -356,11 +356,11 @@ while True:
 	for user in listdir("/home"):
 		authed = False
 		for application in open("/etc/ldmauth.conf").read().split("\n"):
-			print("app:"+application.replace("$username", user))
+			print("app:"+application.replace("\$username", user))
 			if "$username" not in application:
 				#print("app:skip")
 				continue
-			if  system(application.replace("$username", user)) == 0:
+			if  system(application.replace("\$username", user)) == 0:
 				#print("app:sucess")
 				authed = True
 				break
@@ -385,7 +385,7 @@ ExecStart=/bin/python3 /bin/ldmauthd
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable ldmauth
+arch-chroot /mnt systemctl enable ldmauth
 echo 'usblogin verify $username
 bluetoothlogin verify $username' > /mnt/etc/ldmauth.conf
 
