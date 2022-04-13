@@ -357,7 +357,7 @@ while True:
 		authed = False
 		for application in open("/etc/ldmauth.conf").read().split("\n"):
 			print("app:"+application.replace("\$username", user))
-			if "$username" not in application:
+			if "\$username" not in application:
 				#print("app:skip")
 				continue
 			if  system(application.replace("\$username", user)) == 0:
