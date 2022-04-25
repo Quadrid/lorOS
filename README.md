@@ -1,3 +1,6 @@
+# Development in the main branch is currently halted. Instead, we will develop features in their own branches until they are able to be merged into one product
+
+
 # lorOS
 Quadrid lorOS is an operating system which should be simple to use and install.
 
